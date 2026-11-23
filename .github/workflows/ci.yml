@@ -1,0 +1,86 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Validate data files and consistency
+        run: python3 scripts/validate.py
+
+      - name: Check approaching and overdue regulatory deadlines
+        run: python3 scripts/deadline-checker.py
+
+      - name: Guard test suite
+        run: bash agent-os/hooks/app-store-compliance-guard-test.sh
+
+      - name: Installer test suite
+        run: |
+          bash scripts/install-test.sh
+          bash scripts/install-harness-test.sh
+
+      - name: Every link, path, script and flag named in the docs exists
+        run: |
+          bash scripts/check-docs-test.sh
+          python3 scripts/check-docs.py
+
+      - name: Metadata audit test suite
+        run: bash scripts/metadata-audit-test.sh
+
+      - name: Accessibility audit test suite
+        run: bash scripts/accessibility-audit-test.sh
+
+      - name: Policy monitor test suites
+        run: bash scripts/run-monitor-tests.sh
+
+      - name: Release audit test
+        run: bash scripts/release-audit-test.sh
+
+      - name: Fleet Sweep test
+        run: bash scripts/fleet-sweep-test.sh
+
+      - name: Ruling Register
+        run: |
+          python3 scripts/ruling-register.py validate
+          bash scripts/ruling-register-test.sh
+
+      - name: Eval scorecard
+        run: python3 scripts/eval-scorecard.py
+
+      - name: Privacy manifest validator and citation verifier tests
+        run: |
+          bash scripts/validate-privacy-manifest-test.sh
+          bash scripts/verify-citations-test.sh
+
+      - name: Timeline and deadline checker tests
+        run: |
+          python3 scripts/test-generate-timeline.py
+          python3 scripts/test-deadline-checker.py
+          python3 scripts/test-validate.py
+          bash scripts/deadline-checker-test.sh
+
+      - name: References are in sync with the taxonomy
+        run: |
+          python3 scripts/generate-references.py
+          if ! git diff --quiet -- references/; then
+            echo "references/ is out of date. Run scripts/generate-references.py and commit."
+            git --no-pager diff --stat -- references/
+            exit 1
+          fi
+          echo "references/ in sync"
+
+      - name: JSON well formed
+        run: |
+          python3 -c "import json; json.load(open('data/rejection-patterns.json')); json.load(open('data/detection-recipes.json')); print('json ok')"
