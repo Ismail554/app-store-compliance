@@ -108,7 +108,7 @@ What it writes, so you can check it.
 - For Kimi Code it appends one marked `[[hooks]]` block to `~/.kimi-code/config.toml` (or `$KIMI_CODE_HOME/config.toml`) and never rewrites or prints the rest of that file, which can hold API keys. Uninstall removes exactly that block.
 - For Factory Droid it writes to `~/.factory/settings.json` when your hooks already live there, because Droid ignores them once `~/.factory/hooks.json` exists.
 
-Details for tools that are not wired by the installer are in [the tool support reference](docs/README-REFERENCE.md#tools-the-installer-does-not-wire).
+Details for tools that are not wired by the installer are in [the tool support reference](docs/README-REFERENCE.md#tools-the-installer-does-not-wire-and-what-to-do-instead).
 
 ### Or let your agent do it
 
